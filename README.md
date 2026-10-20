@@ -21,6 +21,24 @@
 
 </div>
 
+## Visual reading in this fork
+
+Chart-dependent books can now use [the visual reading workflow](./methodology/08-visual-reading.md):
+render selected PDF pages, inspect full pages and optional crops alongside the source text,
+and package reviewed evidence with the generated Skill. PNG/JPEG/WebP resources are preserved
+in single and pack outputs, including hashes and snapshots.
+
+```bash
+python3 -m pip install Pillow
+# Install Poppler (pdfinfo, pdftoppm); pdftotext or optional pypdf extracts page text.
+python3 scripts/cangjie.py render-pages --pdf "/path/book.pdf" --pages 18-20 \
+  --source-id src-book --out "/path/new-page-directory"
+```
+
+Page preparation does not perform OCR or visual interpretation. The agent must actually open
+the images and verify the text/figure correspondence before marking evidence reviewed.
+This is source-only functionality in this fork; upstream release ZIPs are unchanged.
+
 ## Cangjie Skill in 66 seconds
 
 https://github.com/user-attachments/assets/87a2cf7b-2114-48aa-aecd-2640a667db40
@@ -281,3 +299,4 @@ If this project has helped you, please star it.
 ## License
 
 MIT License. See [LICENSE](./LICENSE).
+

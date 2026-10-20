@@ -13,6 +13,9 @@
 
 编译前核对阶段 4 的实际输出记录和 `coverage-audit.md`：格式校验不能替代任务完成验证。存在重要缺口或输出评测未完成时，只能生成明确标注的草稿，不能安装为已验收版本。
 
+依赖图例时按 `08-visual-reading.md` 核对图片声明、相对链接和图文记录；
+在实际安装目录抽查打开图片。原书图片与私人材料不得随工具仓库的代码提交发布。
+
 ```bash
 python3 scripts/cangjie.py compile \
   --bundle books/<slug>/.cangjie/capabilities \
@@ -80,3 +83,4 @@ python3 scripts/cangjie.py compile \
 > 它会用这里的 test-prompts.json 做 ratcheting 自动进化。
 
 仅当约定范围的来源核查、覆盖映射、实际输出评测与交付均完成时，才把 `PIPELINE_STATE.md` 标记为全部完成。参考项说明实际所在文件，待核查项与未实测内容单独列出；不能用收尾模板掩盖缺口。
+

@@ -38,7 +38,10 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install dependencies
-        run: pip install pyyaml jsonschema referencing
+        run: |
+          pip install pyyaml jsonschema referencing Pillow pypdf
+          sudo apt-get update
+          sudo apt-get install -y poppler-utils
       - name: Python regression tests
         run: python3 -m unittest discover -s tests -v
       - name: Doctor（跳过可选 tokenizer 依赖）
@@ -96,3 +99,4 @@ jobs:
           if not bundles:
               print("no bundles to check")
           EOF
+

@@ -25,8 +25,28 @@
     "resources": {
       "type": "array",
       "uniqueItems": true,
-      "description": "显式随包交付的 UTF-8 脚本/CSV/JSON/Markdown 模板，相对 Bundle 与输出 Skill 根目录。禁止符号链接、越界、二进制；编译只复制不执行。",
+      "description": "显式随包交付的 UTF-8 文本或静态 PNG/JPEG/WebP 图片，相对 Bundle 与输出 Skill 根目录。图片需 Pillow 验证，单张不超过 25 MiB / 40MP。禁止符号链接、越界和其他二进制；编译只复制不执行。",
       "items": { "type": "string", "pattern": "^resources/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+(?:\\.[A-Za-z0-9_-]+)*$" },
+      "default": []
+    },
+    "visual_evidence": {
+      "type": "array",
+      "description": "可选图文证据；active 能力只接受已实际核查的图文记录。编译器校验契约，不证明视觉理解正确。",
+      "items": {
+        "type": "object",
+        "required": ["figure_id", "source_id", "source_sha256", "pdf_page", "image", "notes", "review_status"],
+        "properties": {
+          "figure_id": { "type": "string", "minLength": 1 },
+          "source_id": { "type": "string", "minLength": 1 },
+          "source_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "pdf_page": { "type": "integer", "minimum": 1 },
+          "printed_page": { "type": ["string", "null"] },
+          "image": { "type": "string", "description": "完整图，必须在 resources 声明" },
+          "detail_image": { "type": "string", "description": "可选局部图，不能代替完整图，必须在 resources 声明" },
+          "notes": { "type": "string", "description": "非空 UTF-8 图文核查记录，必须在 resources 声明" },
+          "review_status": { "enum": ["reviewed", "needs_review"] }
+        }
+      },
       "default": []
     },
     "frontmatter": {
@@ -74,3 +94,4 @@
     }
   }
 }
+

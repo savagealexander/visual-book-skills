@@ -27,6 +27,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from cangjie_common import TOOL_VERSION, load_yaml  # noqa: E402
+from visual_resources import (IMAGE_FORMATS, MAX_IMAGE_BYTES, validate_image,
+                              validate_visual_evidence, visual_evidence_links)
 
 MD_LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)#\s]+?)(?:#[^)\s]*)?\)")
 
@@ -51,8 +53,8 @@ def promoted_capabilities(bundle: dict) -> list[dict]:
     return [c for c in active_capabilities(bundle) if c.get("promotion", {}).get("destination") == "promoted"]
 
 
-def capability_resources(bundle_dir: Path, cap: dict) -> dict[str, str]:
-    """只打包显式声明的 UTF-8 资源，不跟随符号链接、不执行脚本。"""
+def capability_resources(bundle_dir: Path, cap: dict) -> dict[str, str | bytes]:
+    """只打包显式声明的文本和静态图片，不跟随符号链接、不执行脚本。"""
     resources = cap.get("resources", [])
     if not isinstance(resources, list) or any(not isinstance(p, str) for p in resources):
         raise ValueError("resources 必须是相对文件路径列表")
@@ -67,10 +69,17 @@ def capability_resources(bundle_dir: Path, cap: dict) -> dict[str, str]:
         cur = bundle_dir
         for part in Path(rel).parts:
             cur = cur / part
-            if cur.is_symlink():
+            if cur.is_symlink() or (hasattr(cur, "is_junction") and cur.is_junction()):
                 raise ValueError(f"资源不能是符号链接: {rel}")
         if not path.resolve().is_relative_to(bundle_dir.resolve()) or not path.is_file():
             raise ValueError(f"资源不存在、不是文件或越界: {rel}")
+        if path.suffix.lower() in IMAGE_FORMATS:
+            if path.stat().st_size > MAX_IMAGE_BYTES:
+                raise ValueError(f"图片超过 25 MiB: {rel}")
+            data = path.read_bytes()
+            validate_image(data, rel)
+            files[rel] = data
+            continue
         try:
             content = path.read_bytes().decode("utf-8")
         except UnicodeDecodeError as exc:
@@ -78,6 +87,7 @@ def capability_resources(bundle_dir: Path, cap: dict) -> dict[str, str]:
         if "\x00" in content:
             raise ValueError(f"不支持二进制资源: {rel}")
         files[rel] = content
+    validate_visual_evidence(cap, files)
     return files
 
 
@@ -186,17 +196,18 @@ def build_cheatsheet_md(caps: list[dict], book: dict) -> str:
     return "\n".join(rows) + "\n"
 
 
-def build_tree(bundle_dir: Path, variant: str) -> dict[str, str]:
+def build_tree(bundle_dir: Path, variant: str) -> dict[str, str | bytes]:
     """返回 {相对路径: 内容}。纯函数，供 compile_pack.py 与 cangjie.py 复用。"""
     bundle = load_yaml(bundle_dir / "verified.yaml")
     caps = active_capabilities(bundle)
 
-    files: dict[str, str] = {}
+    files: dict[str, str | bytes] = {}
     files["SKILL.md"] = build_entry_md(bundle, variant)
     for cap in caps:
         files.update(capability_resources(bundle_dir, cap))
         files[f"references/capabilities/{cap['slug']}.md"] = (
-            (bundle_dir / cap["card"]).read_text(encoding="utf-8") + resource_links(cap, "../../"))
+            (bundle_dir / cap["card"]).read_text(encoding="utf-8")
+            + visual_evidence_links(cap, "../../") + resource_links(cap, "../../"))
     files["references/capability-index.md"] = build_index_md(caps)
     files["references/cheatsheet.md"] = build_cheatsheet_md(caps, bundle["book"])
 
@@ -208,11 +219,11 @@ def build_tree(bundle_dir: Path, variant: str) -> dict[str, str]:
     return files
 
 
-def write_tree(files: dict[str, str], out: Path) -> None:
+def write_tree(files: dict[str, str | bytes], out: Path) -> None:
     for rel, content in files.items():
         p = out / rel
         p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_bytes(content.encode("utf-8"))
+        p.write_bytes(content if isinstance(content, bytes) else content.encode("utf-8"))
 
 
 def main() -> int:
@@ -230,3 +241,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

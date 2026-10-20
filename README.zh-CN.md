@@ -21,6 +21,23 @@
 
 </div>
 
+## 本 fork 的图文阅读增强
+
+图表密集的书可启用[图文联合阅读流程](./methodology/08-visual-reading.md)：
+渲染选定 PDF 页，结合正文实际查看完整图和局部图，再把核查记录与图片一起交付。
+single / pack 都支持 PNG/JPEG/WebP 资源，并沿用发布哈希、手改检测与快照。
+
+```bash
+python3 -m pip install Pillow
+# 安装 Poppler（pdfinfo、pdftoppm）；正文提取用 pdftotext 或可选 pypdf。
+python3 scripts/cangjie.py render-pages --pdf "/path/book.pdf" --pages 18-20 \
+  --source-id src-book --out "/path/new-page-directory"
+```
+
+脚本只准备图页，不做 OCR 或视觉理解。Agent 必须实际打开图片、核对图文，
+才能把证据标为 reviewed；尚未完成的部分明确保留为待核查。
+增强代码在本 fork 源码中，上游既有 Release ZIP 不包含这些改动。
+
 ## 66 秒了解仓颉 Skill
 
 https://github.com/user-attachments/assets/87a2cf7b-2114-48aa-aecd-2640a667db40
@@ -278,3 +295,4 @@ cangjie-skill 是一个更大的 skill 生态的一部分：
 ## License
 
 MIT License. See [LICENSE](./LICENSE).
+

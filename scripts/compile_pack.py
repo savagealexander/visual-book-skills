@@ -30,6 +30,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from cangjie_common import TOOL_VERSION, dump_json, load_yaml  # noqa: E402
 from compile_single import (active_capabilities, build_tree, capability_resources,
                             promoted_capabilities, resource_links, write_tree)  # noqa: E402
+from visual_resources import visual_evidence_links
 
 
 def build_promoted_skill_md(cap: dict, bundle: dict, card_text: str) -> str:
@@ -54,7 +55,7 @@ def build_promoted_skill_md(cap: dict, bundle: dict, card_text: str) -> str:
     return "\n".join(lines) + card_text
 
 
-def compile_pack_tree(bundle_dir: Path, *, allow_over_budget: bool = False) -> dict[str, str]:
+def compile_pack_tree(bundle_dir: Path, *, allow_over_budget: bool = False) -> dict[str, str | bytes]:
     """返回 {相对路径: 内容}，含路由入口、晋级 Skill 与 destinations 审计清单。"""
     bundle = load_yaml(bundle_dir / "verified.yaml")
     caps = active_capabilities(bundle)
@@ -73,7 +74,7 @@ def compile_pack_tree(bundle_dir: Path, *, allow_over_budget: bool = False) -> d
     if entrypoint_count > budget and not allow_over_budget:
         raise SystemExit(f"[invariant] 可发现入口 {entrypoint_count} 超出软预算 {budget}；确需超出请 --allow-over-budget 并在发布说明逐项解释")
 
-    files: dict[str, str] = {}
+    files: dict[str, str | bytes] = {}
 
     # 来源路由入口（复用 single 编译逻辑的 router 视图；全部能力卡保留）
     for rel, content in build_tree(bundle_dir, "router").items():
@@ -82,7 +83,8 @@ def compile_pack_tree(bundle_dir: Path, *, allow_over_budget: bool = False) -> d
     # 晋级 Skill：自包含，不引用跨目录路径（不变量 3 由内容构造保证 + 校验兜底）
     for cap in promoted:
         card_text = (bundle_dir / cap["card"]).read_text(encoding="utf-8")
-        skill_md = build_promoted_skill_md(cap, bundle, card_text) + resource_links(cap)
+        skill_md = (build_promoted_skill_md(cap, bundle, card_text)
+                    + visual_evidence_links(cap) + resource_links(cap))
         if "references/capabilities/" in skill_md or f"../{router_name}" in skill_md:
             raise SystemExit(f"[invariant] 晋级 Skill {cap['slug']} 引用了跨目录路径，必须自包含")
         files[f"{cap['slug']}/SKILL.md"] = skill_md
@@ -133,3 +135,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

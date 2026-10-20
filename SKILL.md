@@ -55,6 +55,11 @@ metadata:
 
 **非书籍内容的字段映射**: 章节类字段对视频填时间戳或分 P,对播客填集数,对课程填讲次 — 保证可追溯即可。
 
+**图表密集内容**：若规则或案例依赖图表，在阶段 0 读取
+`methodology/08-visual-reading.md`，建立图页范围、实际打开图像并关联正文。
+渲染/OCR 完成不等于已读懂；关键图文缺口进入 needs-review，不凭文字补造图中事实。
+该指南同时规定能力卡的 visual_evidence、图片交付及阶段 4 的图文测试。
+
 ## 输出结构
 
 ```
@@ -73,7 +78,7 @@ books/<book-slug>/
     ├── capabilities/
     │   ├── verified.yaml      # Capability Bundle（唯一编译事实源, capability-bundle.schema.json）
     │   ├── cards/<slug>.md    # RIA 能力卡（R/I/A1/A2/E/B, 阶段 2 产出）
-    │   ├── resources/         # 能力显式声明的 UTF-8 脚本、CSV/JSON/Markdown 模板（可选）
+    │   ├── resources/         # 显式声明的 UTF-8 文本及 PNG/JPEG/WebP 图文证据（可选）
     │   ├── destinations.json  # 晋级/路由去向映射（阶段 1.6 产出）
     │   └── book/{overview.md,glossary.md}
     ├── runs/<run-id>/         # 每次编译/更新的决策报告与校验日志
@@ -133,7 +138,7 @@ books/<book-slug>/
 
 - 卡片正文写入 `books/<slug>/.cangjie/capabilities/cards/<slug>.md`（**不带 frontmatter**,frontmatter 数据记入 Bundle）;
 - 同时在 `verified.yaml` 登记该能力: 稳定 `capability_id`、intents、keywords、one_liner、importance（附依据）、`frontmatter.description`（A2 浓缩版）。
-- A1 区分原书案例与明确标记的合成演练；E 明确输入、输出、分支和完成标准。必要时通过 `resources` 显式声明配套文本资源，见阶段 2 说明。
+- A1 区分原书案例与明确标记的合成演练；E 明确输入、输出、分支和完成标准。必要时通过 `resources` 显式声明配套文本和图片资源；依赖图例的能力按图文指南登记 `visual_evidence`，把看图要求和判停条件写入 E/B。
 
 ### 阶段 3 — Zettelkasten 链接
 
@@ -182,3 +187,4 @@ books/<book-slug>/
 - **保留审计轨迹** — candidates/ 和 rejected/ 都要留
 - **随时可续跑** — 每完成一个阶段就更新 PIPELINE_STATE.md,中断后从状态文件恢复
 - **输出策略持久化** — update/repair 默认沿用原输出模式,不因新增材料静默改变产物形态
+

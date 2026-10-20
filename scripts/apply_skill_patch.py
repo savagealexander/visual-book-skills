@@ -35,9 +35,9 @@ def apply_patch(target: Path, patch_dir: Path, snapshots: Path) -> int:
         for pf in patch_files:
             rel = pf.relative_to(patch_dir)
             dest = target / rel
-            old = dest.read_text(encoding="utf-8") if dest.exists() else ""
-            new = pf.read_text(encoding="utf-8")
-            diff_lines.append(f"### {rel}: {'修改' if dest.exists() else '新增'}（{len(old)} → {len(new)} 字符）")
+            old = dest.stat().st_size if dest.exists() else 0
+            new = pf.stat().st_size
+            diff_lines.append(f"### {rel}: {'修改' if dest.exists() else '新增'}（{old} → {new} 字节）")
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(pf, dest)
 
@@ -83,3 +83,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

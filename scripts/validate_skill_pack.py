@@ -19,6 +19,7 @@ import sys
 from pathlib import Path
 
 import yaml
+from visual_resources import IMAGE_FORMATS, MAX_IMAGE_BYTES, validate_image
 
 MD_LINK_RE = re.compile(r"\]\(([^)#\s]+?)(?:#[^)\s]*)?\)")
 BARE_REF_RE = re.compile(r"(?<![\w/(])((?:references|assets)/[\w\-./]+\.[a-zA-Z0-9]+)")
@@ -86,6 +87,14 @@ def main(argv: list[str]) -> int:
         if not root.is_dir():
             errors.append(f"[input] 目录不存在: {root}")
             continue
+        for asset in sorted(root.rglob("*")):
+            if asset.is_file() and asset.suffix.lower() in IMAGE_FORMATS:
+                try:
+                    if asset.stat().st_size > MAX_IMAGE_BYTES:
+                        raise ValueError("图片超过 25 MiB")
+                    validate_image(asset.read_bytes(), str(asset))
+                except ValueError as exc:
+                    errors.append(f"[image] {exc}")
         for md in sorted(root.rglob("*.md")):
             md_count += 1
             try:
@@ -111,3 +120,4 @@ def main(argv: list[str]) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main(sys.argv))
+

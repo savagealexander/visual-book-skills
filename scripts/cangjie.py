@@ -3,6 +3,7 @@
 
 子命令：
   doctor          环境自检（无网络、无重依赖场景可通过核心检查）
+  render-pages    将选定 PDF 页渲染为完整图/局部图/正文和来源清单（不调用模型）
   migrate-legacy  旧 one-to-one pack + 人工能力映射 → Capability Bundle（.cangjie/capabilities/）
   compile         Capability Bundle → single | compact pack（auto 决策 + 锁 + staging + 原子发布）
   replan-output   重新评估输出策略，只生成 side-by-side 预览，不迁移
@@ -45,15 +46,19 @@ SCRIPTS = Path(__file__).parent
 def cmd_doctor(_args) -> int:
     ok = True
     print(f"{TOOL_VERSION}\npython: {sys.version.split()[0]}")
-    for mod, required in (("yaml", True), ("tiktoken", False), ("jsonschema", False)):
+    for mod, required in (("yaml", True), ("tiktoken", False), ("jsonschema", False), ("PIL", False), ("pypdf", False)):
         try:
             __import__(mod)
             print(f"  [ok] {mod}")
         except ImportError:
             level = "缺失(必需)" if required else "缺失(可选)"
-            hint = "  → python3 -m pip install pyyaml" if mod == "yaml" else ""
+            hint = {"yaml": "  → python3 -m pip install pyyaml",
+                    "PIL": "  → 图像支持: python3 -m pip install Pillow"}.get(mod, "")
             print(f"  [{'FAIL' if required else 'warn'}] {mod} {level}{hint}")
             ok = ok and not required
+    for binary in ("pdfinfo", "pdftoppm", "pdftotext"):
+        print(f"  [{'ok' if shutil.which(binary) else 'warn'}] {binary} "
+              "(PDF 图页准备；pdftotext 缺失时用可选 pypdf 提取文本)")
     for rel in ("capability-bundle.schema.json", "registry-entry.schema.json", "contracts/source-document.schema.json"):
         p = SCRIPTS.parent / "schemas" / rel
         print(f"  [{'ok' if p.exists() else 'FAIL'}] schemas/{rel}")
@@ -247,6 +252,8 @@ def _dispatch(script: str, extra: list[str]) -> int:
 def main() -> int:
     # 这两个命令需要把未知选项原样透传给子工具。argparse 的子解析器
     # 会在 `--token-config` 这类选项上提前报错，因此在根解析前直接分发。
+    if len(sys.argv) > 1 and sys.argv[1] == "render-pages":
+        return _dispatch("render_book_pages.py", sys.argv[2:])
     if len(sys.argv) > 1 and sys.argv[1] == "benchmark":
         return _dispatch("benchmark.py", sys.argv[2:])
     if len(sys.argv) > 1 and sys.argv[1] == "eval":
@@ -262,6 +269,7 @@ def main() -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     sub.add_parser("doctor")
+    sub.add_parser("render-pages", add_help=False, help="PDF 图页准备；render-pages --help 查看选项")
 
     p = sub.add_parser("migrate-legacy")
     p.add_argument("--map", required=True, help="人工能力映射 capability-map.yaml")
@@ -320,3 +328,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

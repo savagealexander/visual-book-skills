@@ -88,7 +88,7 @@ class ResourceCompileTests(unittest.TestCase):
                 for path in paths:
                     self.assertEqual(path.read_bytes(), source.read_bytes())
 
-    def test_missing_directory_symlink_and_binary_rejected(self):
+    def test_missing_directory_and_binary_rejected(self):
         self.bundle["capabilities"][0]["resources"] = ["resources/input.csv"]
         with self.assertRaises(ValueError):
             self.compile()
@@ -98,14 +98,24 @@ class ResourceCompileTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.compile()
         (resource_dir / "input.csv").rmdir()
-        (resource_dir / "input.csv").symlink_to(self.root / "cards/calculate.md")
+        (resource_dir / "input.csv").write_bytes(b"\x00\xff")
         with self.assertRaises(ValueError):
             self.compile()
-        (resource_dir / "input.csv").unlink()
-        (resource_dir / "input.csv").write_bytes(b"\x00\xff")
+
+    def test_symlink_rejected(self):
+        self.bundle["capabilities"][0]["resources"] = ["resources/input.csv"]
+        resource_dir = self.root / "resources"
+        resource_dir.mkdir()
+        try:
+            (resource_dir / "input.csv").symlink_to(self.root / "cards/calculate.md")
+        except OSError as exc:
+            if getattr(exc, "winerror", None) == 1314:
+                self.skipTest("Windows requires symlink privileges")
+            raise
         with self.assertRaises(ValueError):
             self.compile()
 
 
 if __name__ == "__main__":
     unittest.main()
+
