@@ -1,302 +1,138 @@
-<p align="center">
-  <a href="./README.zh-CN.md">简体中文</a> ·
-  <a href="./README.md">English</a> ·
-  <a href="./README.ja.md">日本語</a>
-</p>
+# 图文知行 · Visual Book Skills
 
-<div align="center">
+把书中的文字、图表和案例整理成有来源依据、可反复调用的 Agent Skills。
 
-# Cangjie Skill
+[English](./README.en.md) · [技能入口](./SKILL.md) · [图文阅读流程](./methodology/08-visual-reading.md) · [MIT License](./LICENSE)
 
-### Distill methodologies from books, long-form videos, and podcasts into callable AI Skills
+## 这个项目做什么
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
-[![Version: 2.5.0](https://img.shields.io/badge/Version-2.5.0-8b5cf6.svg)](./CHANGELOG.md)
-[![Method: RIA--TV++](https://img.shields.io/badge/Method-RIA--TV++-2ea44f.svg)](./SKILL.md)
-[![Platform: OpenClaw](https://img.shields.io/badge/Platform-OpenClaw-1677ff.svg)](https://github.com/openclaw/openclaw)
-[![Platform: Claude Code](https://img.shields.io/badge/Platform-Claude%20Code-f97316.svg)](https://code.claude.com/)
-[![Platform: DeepSeek Harness](https://img.shields.io/badge/Platform-DeepSeek%20Harness-4f46e5.svg)](#deepseek-harness-plugin)
+读懂方法，往往需要同时看正文、图例和作者对案例的解释。图文知行把这些材料关联起来，再整理为输入、步骤、适用条件、反例和输出要求，供 AI 在后续任务中按需调用。
 
-**Finish reading, watching, or listening—and leave with a methodology you can invoke.**
+它是一个面向 Agent 的阅读与技能构建工作流。模型负责理解和核查内容，Python 工具负责图页准备、资源打包、静态校验与版本管理。
 
-</div>
+适合图表密集的技术书、操作手册、课程讲义，也支持文字材料和已经取得的字幕、转写稿。Brooks 价格行为书是图文阅读流程的设计场景之一。
 
-## Visual reading in this fork
+## 核心能力
 
-Chart-dependent books can now use [the visual reading workflow](./methodology/08-visual-reading.md):
-render selected PDF pages, inspect full pages and optional crops alongside the source text,
-and package reviewed evidence with the generated Skill. PNG/JPEG/WebP resources are preserved
-in single and pack outputs, including hashes and snapshots.
+| 能力 | 实际作用 |
+|---|---|
+| 图页准备 | 渲染选定 PDF 页，保留完整页面，并按需裁切局部 |
+| 图文对应 | 关联图号、PDF 页序、书本页码及解释该图的正文 |
+| 证据核查 | 分别记录图中事实、作者解释、模型推断与未解决的问题 |
+| 方法构建 | 提取触发场景、必要输入、执行步骤、边界和完成标准 |
+| 可携带产物 | 将核查记录与 PNG/JPEG/WebP 图片随生成的 skill 一起保存 |
+| 更新与恢复 | 图片沿用文件哈希、手改检测、快照和回滚机制 |
 
-```bash
-python3 -m pip install Pillow
-# Install Poppler (pdfinfo, pdftoppm); pdftotext or optional pypdf extracts page text.
-python3 scripts/cangjie.py render-pages --pdf "/path/book.pdf" --pages 18-20 \
-  --source-id src-book --out "/path/new-page-directory"
-```
+局部图始终与完整图配合使用。对于时序图表，流程要求区分事后复盘与当时判断，后者需要隐藏未来走势及透露答案的标注。
 
-Page preparation does not perform OCR or visual interpretation. The agent must actually open
-the images and verify the text/figure correspondence before marking evidence reviewed.
-This is source-only functionality in this fork; upstream release ZIPs are unchanged.
+## 安装
 
-## Cangjie Skill in 66 seconds
+需要支持本地 Agent Skills、文件读写和 Python 命令的宿主。图文任务还需要宿主能够实际打开图片。
 
-https://github.com/user-attachments/assets/87a2cf7b-2114-48aa-aecd-2640a667db40
-
-## Official Website
-
-🌐 [Visit the Cangjie Skill official website](https://cangjie-skill.com/)
-
-The website provides visual Skill Pack browsing, a beginner-friendly usage guide, Skill detail pages, and a contribution submission entry. This GitHub repository remains the sole source for cangjie-skill code, methodology, and templates; the website provides presentation, navigation, and usage guidance.
-
-## What's New in v2.5.0
-
-- **Capability Bundle as the single source of truth**: extraction produces stable capability cards and metadata before any installable output is compiled.
-- **Two deterministic delivery modes**: compile one router-style Skill (`single`) or a compact pack with a router plus promoted standalone Skills (`pack`).
-- **A unified local toolchain**: `scripts/cangjie.py` now covers diagnostics, compilation, output replanning, incremental updates, repair, rollback, evaluation, and benchmarking.
-- **Safer evolution**: content-addressed preprocessing, source diffs, impact analysis, transactional patches, edit detection, snapshots, and rollback are included.
-- **Registry v2 and website support**: output mode and capability counts are visible without breaking existing Registry v1 entries.
-
-See the [v2.5.0 release notes](./docs/releases/v2.5.0.md) and [changelog](./CHANGELOG.md) for the complete scope and migration notes.
-
-**2026-09-13 refresh (still v2.5.0):** task-first validation now retains complete procedures and formulas explained in a single source location. Output scoring counts missing runs and checks numeric values/units; compiled Skills can carry declared scripts and text templates. [Download the refreshed generic Skill ZIP](https://github.com/kangarooking/cangjie-skill/releases/download/v2.5.0/cangjie-skill-2.5.0.zip) · [SHA256](https://github.com/kangarooking/cangjie-skill/releases/download/v2.5.0/cangjie-skill-2.5.0.zip.sha256). Extract it and install the complete `cangjie-skill/` directory. Existing users must download the refreshed package; check `BUILD_INFO.json` for the source commit and refresh date. The original tag is unchanged, so GitHub's automatic source archives do not contain this refresh.
-
-## DeepSeek Harness Plugin
-
-cangjie-skill also provides a standalone installation package for DeepSeek Harness. The adapter layer is bundled in the Release package, so no platform-specific wrapper files are added to this repository.
-
-After installing DeepSeek Harness, download the v2.5.0 package and checksum, verify it, then install from the local tarball:
-
-```bash
-mkdir -p ~/.dsh/packages
-curl -fL "https://github.com/kangarooking/cangjie-skill/releases/download/v2.5.0/dsh-cangjie-skill-2.5.0.tgz" \
-  -o ~/.dsh/packages/dsh-cangjie-skill-2.5.0.tgz
-curl -fL "https://github.com/kangarooking/cangjie-skill/releases/download/v2.5.0/dsh-cangjie-skill-2.5.0.tgz.sha256" \
-  -o ~/.dsh/packages/dsh-cangjie-skill-2.5.0.tgz.sha256
-(cd ~/.dsh/packages && shasum -a 256 -c dsh-cangjie-skill-2.5.0.tgz.sha256)
-dsh plugin --profile web add ~/.dsh/packages/dsh-cangjie-skill-2.5.0.tgz
-dsh web
-```
-
-[Download the DeepSeek Harness plugin (for Cangjie Skill v2.5.0)](https://github.com/kangarooking/cangjie-skill/releases/download/v2.5.0/dsh-cangjie-skill-2.5.0.tgz) · [SHA256 checksum](https://github.com/kangarooking/cangjie-skill/releases/download/v2.5.0/dsh-cangjie-skill-2.5.0.tgz.sha256)
-
-After starting a new task, you can say:
+将本仓库的最新源码放入宿主支持的技能目录，目录名使用 `visual-book-skills`，保留完整文件结构：
 
 ```text
-Use cangjie-skill to distill this book into a set of executable Agent Skills: <file path>
+visual-book-skills/
+├── SKILL.md
+├── methodology/
+├── extractors/
+├── templates/
+├── scripts/
+└── schemas/
 ```
 
-## Why This Exists
+例如，在你选定的技能目录中运行：
 
-There's a recent viral idea: distilling colleagues into AI skills. Even after someone leaves, their experience, tone, and work style can be partially replicated by AI. [nuwa-skill](https://github.com/alchaincyf/nuwa-skill) does exactly this — creating "human skills" like an Elon Musk skill or a Warren Buffett skill. The companion [darwin-skill](https://github.com/alchaincyf/darwin-skill) handles automatic skill evolution.
-
-Distilling people is valuable — nuwa-skill has already proven this. Distilling the content people have **expressed systematically** is a complementary dimension: a book, a long-form interview, a podcast episode, or a long Bilibili or YouTube video can contain methodologies that took the creator years to refine. Rather than imitating someone's expression style, extracting those methodologies and turning them into tools that solve real problems is equally valuable.
-
-There's also a real pain point: you may read many books, save many videos, and listen to many podcasts, yet still struggle to apply what you learned. Content-rich long videos are published every day, are often time-sensitive, and can be difficult to absorb in one viewing; they may not be represented in an AI model's training data at all. Once this content is distilled into skills, an AI agent can invoke the knowledge in real scenarios instead of letting it gather dust in notes, bookmarks, or watch-later lists.
-
-So cangjie-skill has one clear goal: **distill every piece of high-value content worth distilling**. It works not only with books, but also with videos that have subtitles or transcripts, podcasts, interviews, talks, courses, long-form articles, and document collections. Whenever content contains extractable, verifiable, and transferable methodologies, cangjie-skill can turn them into independently callable, composable, and pressure-testable AI skill packs.
-
-For video content, we recommend using the [video-downloader](https://github.com/kangarooking/kangarooking-skills/tree/main/video-downloader) skill alongside cangjie-skill. Use it first to download the video, extract subtitles or audio transcripts, and collect key materials; then pass the resulting text to cangjie-skill for methodology extraction, skill construction, and pressure testing.
-
-## What Problems It Solves
-
-- Reading many books, watching many videos, or listening to many podcasts without applying them — knowledge stays at the "read/watched/listened/saved" level and cannot be invoked in real decisions
-- Summaries, notes, and organized transcripts are compression, not structured reuse — after reading or watching, you still do not know "what to use when"
-- Only a small fraction of high-value content deserves to become a tool — strict filtering is needed, not wholesale inclusion
-- Existing methods for reading, watching, and learning are designed for people, not agents — distillation must be execution-oriented rather than consumption-oriented
-
-## How It Works
-
-cangjie-skill uses the **RIA-TV++** pipeline to transform source texts—including books, video transcripts, podcast transcripts, and interview notes—into a reusable Capability Bundle, then compiles that source into installable skills. The process has seven stages:
-
-> **Script dependencies**: the deterministic scripts under `scripts/` require **Python 3.10+** and **PyYAML** (`python3 -m pip install pyyaml`). `python3 scripts/cangjie.py doctor` runs a self-check and works even when PyYAML is missing. Optional: `tiktoken`, `jsonschema`.
-
-1. **Whole-Content Comprehension (Adler Analysis)** — Structural, interpretive, critical, and applicability analysis using Mortimer Adler's method, producing `BOOK_OVERVIEW.md`
-2. **Parallel Extraction** — Five specialized extractors (frameworks, principles, cases, counter-examples, glossary) run simultaneously to pull candidate units from the source text
-3. **Triple Verification + Promotion Gate** — Check source sufficiency, executability, and task utility by candidate type. A complete procedure or formula explained once can qualify; repetition or author originality is not mandatory. References and unresolved candidates remain auditable, and standalone entrypoints are decided separately
-4. **RIA++ Capability Construction** — Verified content is structured into R / I / A1 / A2 / E / B capability cards inside `.cangjie/capabilities/`
-5. **Zettelkasten Linking** — Dependencies, contrasts, and compositions are encoded in the Bundle's capability graph and shared glossary
-6. **Pressure Testing** — Test prompts including bait questions (and cross-skill confusion tests) are designed for each skill; failures go back for full reconstruction
-7. **Deterministic Compilation and Delivery** — The same Bundle compiles to `single` or compact `pack`, alongside a reader-facing `DIGEST.md`, validation results, and installable artifacts
-
-The name RIA-TV++ breaks down as:
-- **RIA**: From Zhao Zhou's bookmark method (Reading / Interpretation / Appropriation)
-- **TV**: Triple Verification
-- **++**: Agent-oriented extensions — E (Execution) + B (Boundary)
-
-## Effect Examples
-
-### Example 1: From a Book or Long-Form Video to a Skill Toolkit
-
-**User Need**
-
-"I want to turn the core methodologies from a book or a long Bilibili/YouTube video into reusable AI skills, not just a summary."
-
-**How cangjie-skill reasons**
-
-- Check whether the source material has reusable methodological units
-- Distinguish what deserves to be a standalone skill vs. background material
-- Output a structured skill repository, not a single summary document
-
-**Example Output**
-
-> The result will not be one summary document. It will be a multi-skill repository with `BOOK_OVERVIEW.md`, `INDEX.md`, a reader-facing `DIGEST.md`, a `GLOSSARY.md`, multiple `*/SKILL.md` files, and `test-prompts.json` for trigger testing.
-
-### Example 2: Structured Reuse, Not Compression
-
-**User Need**
-
-"I don't want a long explanatory article. I want a skill pack my agent can reuse."
-
-**How cangjie-skill reasons**
-
-- Target is structured reuse, not narrative compression
-- Prioritize triggerable, composable, testable skill units
-- Reject material that doesn't deserve standalone skill status
-
-**Example Output**
-
-> The system produces multiple skill modules with trigger conditions, boundaries, execution patterns, and related-skill links — rather than flattening the source into one generalized note.
-
-## Generated Skill Packs
-
-| Repository | Source | Skills |
-|------------|--------|--------|
-| [buffett-letters-skill](https://github.com/kangarooking/buffett-letters-skill) | Buffett's shareholder letters (1957-2023) | 20 |
-| [cognitive-dividend-skill](https://github.com/kangarooking/cognitive-dividend-skill) | Cognitive Dividend | 15 |
-| [duan-yongping-skill](https://github.com/kangarooking/duan-yongping-skill) | Duan Yongping's Q&A (business + investment logic) | 15 |
-| [viral-copywriting-skill](https://github.com/kangarooking/viral-copywriting-skill) | Bao Kuan Wen An | 14 |
-| [copywriters-handbook-skill](https://github.com/kangarooking/copywriters-handbook-skill) | The Copywriter's Handbook | 12 |
-| [contagious-skill](https://github.com/kangarooking/contagious-skill) | Contagious | 15 |
-| [influence-skill](https://github.com/kangarooking/influence-skill) | Influence | 12 |
-| [1000-true-fans-skill](https://github.com/kangarooking/1000-true-fans-skill) | 1000 True Fans | 13 |
-| [system-prompt-skills](https://github.com/kangarooking/system-prompt-skills) | 165 AI product system prompts | 15 |
-| [X-growth-skills](https://github.com/kangarooking/X-growth-skills) | Practical X (Twitter) account launch, content growth, algorithm, engagement, and monetization resources | 15 |
-| [sunyuchen-skill](https://github.com/kangarooking/sunyuchen-skill) | A single narrative writing sample labeled “sunyuchen” | 1 (7 capabilities) |
-| [poor-charlies-almanack-skill](https://github.com/kangarooking/poor-charlies-almanack-skill) | Poor Charlie's Almanack | 12 |
-| [no-rules-rules-skill](https://github.com/kangarooking/no-rules-rules-skill) | No Rules Rules | 10 |
-| [huangdi-neijing-skill](https://github.com/kangarooking/huangdi-neijing-skill) | *Huangdi Neijing* (*Suwen* + *Lingshu*) | 22 |
-| [first-principles-skill](https://github.com/kangarooking/first-principles-skill) | First Principles | 10 |
-| [mao-selected-works-skill](https://github.com/kangarooking/mao-selected-works-skill) | Selected Works of Mao Zedong, Vol. 1-5 | 25 |
-| [qbdx-hub/buffett-letters-skill](https://github.com/qbdx-hub/buffett-letters-skill) | Buffett Shareholder Letters (1957-2023) | 20 |
-| [qbdx-hub/wo-yu-di-tan-skill](https://github.com/qbdx-hub/wo-yu-di-tan-skill) | Wo Yu Di Tan | 6 |
-| [qbdx-hub/mingchao-those-things-skill](https://github.com/qbdx-hub/mingchao-those-things-skill) | Mingchao Those Things | 7 |
-| [qbdx-hub/sunzi-bingfa-skill](https://github.com/qbdx-hub/sunzi-bingfa-skill) | Sunzi Bingfa | 8 |
-| [qbdx-hub/zhouyi-skill](https://github.com/qbdx-hub/zhouyi-skill) | Zhouyi | 8 |
-| [qbdx-hub/high-math-vol1-ch1-skill](https://github.com/qbdx-hub/high-math-vol1-ch1-skill) | High Math Vol. 1 Chapter 1 | 8 |
-
-## Video Distillation
-
-These repositories are built from subtitles or transcripts of long-form videos, courses, or video collections. They demonstrate cangjie-skill's ability to distill methodologies from non-book content.
-
-| Repository | Source | Skills |
-|------------|--------|--------|
-| [ai-for-everyone-skill](https://github.com/kangarooking/ai-for-everyone-skill) | Andrew Ng's *AI for Everyone* video course | 25 |
-| [loop-engineering-skill](https://github.com/kangarooking/loop-engineering-skill) | Loop Engineering long-form video collection | 8 |
-
-More high-value books are planned for distillation. Future candidates include, but are not limited to, *The Prince*.
-
-Additional external source (included with the author's permission):
-
-- Source repository: [ace3000chao/book2startup](https://github.com/ace3000chao/book2startup)
-- Included books: *The Lean Startup*, *The Art of War*, *Zhuangzi*, and *I Ching*
-- Source repository: [shenqistart/book2skill](https://github.com/shenqistart/book2skill)
-- Included books: *Chanlun* and *The Classic of Tea*
-
-## Repository Structure
-
-```text
-cangjie-skill/
-├── README.md              ← You are here (default)
-├── README.zh-CN.md        ← Simplified Chinese version
-├── README.ja.md           ← Japanese version
-├── LICENSE                ← MIT License
-├── SKILL.md               ← Meta-skill definition (full execution spec for cangjie-skill)
-├── methodology/           ← RIA-TV++ stage-by-stage methodology docs
-├── extractors/            ← Prompt definitions for the 5 parallel extractors
-└── templates/             ← SKILL.md / INDEX.md / BOOK_OVERVIEW.md templates
+```bash
+git clone https://github.com/savagealexander/visual-book-skills.git visual-book-skills
+cd visual-book-skills
+python -m pip install pyyaml
+python scripts/cangjie.py doctor
 ```
 
-## Ecosystem
+图文任务另需：
 
-cangjie-skill is part of a larger skill ecosystem:
+```bash
+python -m pip install Pillow pypdf
+```
 
-- [nuwa-skill](https://github.com/alchaincyf/nuwa-skill) — Distills people (thinking styles, expression DNA)
-- **cangjie-skill** (this repo) — Distills books (methodologies, frameworks, principles)
-- [darwin-skill](https://github.com/alchaincyf/darwin-skill) — Evolves any skill
+还需安装 Poppler，让 `pdfinfo` 和 `pdftoppm` 出现在 PATH 中。页内文字优先用 `pdftotext`，缺失时使用 `pypdf`。两者都不可用时，图页仍可渲染，但清单会明确标记文字提取不可用。
 
-They interlock: nuwa distills people, cangjie distills books, darwin keeps them evolving.
+历史命令 `scripts/cangjie.py`、`.cangjie/` 数据目录及相关 schema 字段继续保留，以兼容继承的工具链。项目和技能入口的新名称是 `visual-book-skills`。
 
-## More Skills
+安装后按宿主的方式重新加载技能。旧的上游安装和历史发行包不会自动获得本项目的增强；同时保留两个同用途入口可能造成调用混淆。
 
-- [Buffett Letters Skill](https://github.com/kangarooking/buffett-letters-skill) — 20 investment reasoning skills from Buffett's 60+ years of shareholder letters
-- [Poor Charlie's Almanack Skill](https://github.com/kangarooking/poor-charlies-almanack-skill) — 12 decision-making and judgment skills from Charlie Munger's core thinking methods
-- [No Rules Rules Skill](https://github.com/kangarooking/no-rules-rules-skill) — 10 organizational design skills from Netflix's culture of freedom and responsibility
-- [Cognitive Dividend Skill](https://github.com/kangarooking/cognitive-dividend-skill) — 15 cognitive tool skills for thinking upgrades from Cognitive Dividend
-- [Duan Yongping Skill](https://github.com/kangarooking/duan-yongping-skill) — 15 business and investment skills from Duan Yongping's Q&A collection
-- [Viral Copywriting Skill](https://github.com/kangarooking/viral-copywriting-skill) — 14 sales copywriting and diagnosis skills from *Bao Kuan Wen An*
-- [Copywriters Handbook Skill](https://github.com/kangarooking/copywriters-handbook-skill) — 12 sales copywriting, headline, and benefit translation skills from *The Copywriter's Handbook*
-- [Contagious Skill](https://github.com/kangarooking/contagious-skill) — 15 STEPPS propagation strategy and word-of-mouth diagnosis skills from *Contagious*
-- [Influence Skill](https://github.com/kangarooking/influence-skill) — 12 persuasion psychology, compliance mechanism, and defensive judgment skills from *Influence*
-- [1000 True Fans Skill](https://github.com/kangarooking/1000-true-fans-skill) — 13 personal branding, true fan development, and trust-based monetization skills from *1000 True Fans*
-- [System Prompt Skills](https://github.com/kangarooking/system-prompt-skills) — 15 system prompt design skills distilled from 165 AI product system prompts
-- [X Growth Skills](https://github.com/kangarooking/X-growth-skills) — 15 skills for X account launch, content, algorithms, engagement, review, and monetization
-- [sunyuchen-skill](https://github.com/kangarooking/sunyuchen-skill) — A restrained narrative writing skill covering cold opens, operational detail, short dialogue, emotional restraint, and object callbacks
-- [Huangdi Neijing Skill](https://github.com/kangarooking/huangdi-neijing-skill) — 22 methodology skills from *Huangdi Neijing*, including 12 from *Suwen* and 10 from *Lingshu*
-- [First Principles Skill](https://github.com/kangarooking/first-principles-skill) — 10 skills on axiomatic reasoning, boundary-breaking innovation, and organizational refresh from *First Principles*
-- [Mao Selected Works Skill](https://github.com/kangarooking/mao-selected-works-skill) — 25 cognition, strategy, organization, and execution skills from *Selected Works of Mao Zedong*
-- [qbdx-hub Buffett Letters Skill](https://github.com/qbdx-hub/buffett-letters-skill) — 20 investment and capital allocation skills from Buffett shareholder letters
-- [qbdx-hub Wo Yu Di Tan Skill](https://github.com/qbdx-hub/wo-yu-di-tan-skill) — 6 skills on limits, suffering, writing, and self-anchoring from *Wo Yu Di Tan*
-- [qbdx-hub Mingchao Those Things Skill](https://github.com/qbdx-hub/mingchao-those-things-skill) — 7 skills on power structure, institutional failure, and historical explanation from *Mingchao Those Things*
-- [qbdx-hub Sunzi Bingfa Skill](https://github.com/qbdx-hub/sunzi-bingfa-skill) — 8 skills on strategic judgment, resource control, and action selection from *Sunzi Bingfa*
-- [qbdx-hub Zhouyi Skill](https://github.com/qbdx-hub/zhouyi-skill) — 8 skills on situational diagnosis, timing, and advance-retreat boundaries from *Zhouyi*
-- [qbdx-hub High Math Vol. 1 Chapter 1 Skill](https://github.com/qbdx-hub/high-math-vol1-ch1-skill) — 8 learning skills on limits, infinitesimals, and continuity from High Math Vol. 1 Chapter 1
+## 怎么使用
 
-External Source (included with the author's permission):
+安装并加载技能后，向 Agent 提出具体要求，例如：
 
-- [book2startup](https://github.com/ace3000chao/book2startup) — includes skills distilled from *The Lean Startup*, *The Art of War*, *Zhuangzi*, and *I Ching*
-- [book2skill](https://github.com/shenqistart/book2skill) — includes AI-Agent skills distilled from *Chanlun* and *The Classic of Tea*
+> 使用 visual-book-skills 阅读这本书。先处理第一章，结合原图、图注和相关正文，提炼可应用的方法。每条方法保留出处、适用条件、反例和待核查问题。
 
-## Contributors
+图文流程会：
 
-Thank you to the following contributors for expanding the cangjie-skill ecosystem:
+1. 确认来源、阅读范围和使用目的。
+2. 建立关键图页及相关正文的对应关系。
+3. 实际打开完整图和必要的局部图，完成图文核查。
+4. 把有充分依据的方法构造成能力卡。
+5. 用实际任务及反例验证，再编译为可安装的 skill。
 
-- [shenqistart](https://github.com/shenqistart) — contributed the external [book2skill](https://github.com/shenqistart/book2skill) reference and additions across the Chinese, English, and Japanese READMEs
-- [qbdx-hub](https://github.com/qbdx-hub) — contributed 6 Cangjie whole-book/chapter distillation example repositories and additions across the Chinese, English, and Japanese READMEs
+一个生成后的 skill 可以接收类似任务：“用书中的方法检查这个案例，列出支持证据、反对证据和缺失信息。”具体分析能力取决于原书内容、生成质量、底层模型与验收结果。
 
-## About the Author
+### 单独准备 PDF 图页
 
-**袋鼠帝 kangarooking** — AI blogger and indie developer. Creator of the AI Top WeChat Official Account “袋鼠帝 AI 客栈”
+以下命令只准备材料，不会自动完成整书阅读或生成方法：
 
-<img src="https://raw.githubusercontent.com/kangarooking/cangjie-skill/main/assets/wechat-personal-qr.jpg" width="220" alt="Kangarooking personal WeChat QR code">
+```bash
+python scripts/cangjie.py render-pages --pdf "/path/book.pdf" --pages 18-20 --source-id src-book --out "/path/new-page-directory"
+```
 
-Volcengine Navigation KOL, Baidu Qianfan Developer Ambassador, GLM Evangelist, Trae Kunming's First Fellow
+`--pages` 使用从 1 开始的 PDF 文件页序。它可能不同于印在纸面上的书本页码，后者需要人工核实。
 
-| Platform | Link |
-|----------|------|
-| 𝕏 Twitter | https://x.com/aikangarooking |
-| Xiaohongshu | https://xhslink.com/m/5YejKvIDBbL |
-| Douyin | https://v.douyin.com/hYpsjphuuKc |
-| WeChat Official Account | 袋鼠帝 AI 客栈 |
-| WeChat Video Channel | AI 袋鼠帝 |
+先查看完整页，再按实际位置裁切：
 
-WeChat Official Account「袋鼠帝 AI 客栈」QR code:
+```bash
+python scripts/cangjie.py render-pages --pdf "/path/book.pdf" --pages 18 --source-id src-book --max-edge 4800 --crop "0.08,0.12,0.94,0.70" --out "/path/new-detail-directory"
+```
 
-![](https://raw.githubusercontent.com/kangarooking/cangjie-skill/main/assets/kangarooking-gzh.png)
+裁切坐标相对页面左上角，格式为 `x0,y0,x1,y1`，取值 0..1；示例坐标需要按实际页面调整。输出目录必须是新目录，完整页面始终保留。
 
-If you also want to distill methodologies from books, long-form videos, podcasts, and courses into callable Agent Skills, join the cangjie-skill WeCom community group:
+输出含完整 PNG、可选局部 PNG、提取文字和来源清单。所有页面初始状态均为 `unreviewed`，实际看图与正文核查完成后才能登记已核查证据。
 
-<img src="https://raw.githubusercontent.com/kangarooking/cangjie-skill/main/assets/wecom-cangjie-group-qr.png" width="220" alt="cangjie-skill WeCom community group QR code">
+## 会生成什么
 
-## ⭐ Star History
+阅读工作区会保留整书概览、候选方法、核查依据、术语、覆盖审计和待核查清单。通过核查的方法以 Capability Bundle 保存，再编译成：
 
-If this project has helped you, please star it.
+- **single**：一个技能入口，按任务加载内部能力卡，适合围绕一本书使用。
+- **pack**：一个来源路由入口加少量独立技能，适合接入多个工作流。
 
-<a href="https://www.star-history.com/?repos=kangarooking%2Fcangjie-skill&type=date&legend=top-left">
- <img alt="Star History Chart" src="./assets/star-history.svg" />
-</a>
+依赖图例的能力可以携带完整图、局部图、来源定位和图文核查记录。只打包明确声明的资源，避免默认复制整本书。
 
-## License
+[能力卡构造](./methodology/04-stage2-ria-plus.md) · [图文证据记录模板](./templates/FIGURE_EVIDENCE.md.template) · [编译与交付](./methodology/07-stage5-deliver.md)
 
-MIT License. See [LICENSE](./LICENSE).
+## 当前边界与验证范围
 
+- 页面渲染、文本提取和资源校验都是确定性工具操作；视觉理解仍由模型或阅读者完成。
+- 脚本不提供自动 OCR、自动图号识别或完整的图文语义核查。
+- `reviewed` 是完成核查后的记录状态，编译成功本身不证明理解正确。
+- 关键图形模糊、图文矛盾或条件缺失时，记录为待核查，不能补造方法。
+- 图片支持静态 PNG/JPEG/WebP，单张最多 25 MiB、40MP；其他二进制资源尚不支持。
+- 当前增量 `update --add` 仅处理文本；图片变更需在 Bundle 中更新、重新核查并编译。
+
+图文增强提交时，本地 40 项测试通过，1 项因 Windows 符号链接权限跳过。验证覆盖渲染、裁切、图像完整性、各类输出、图片补丁与回滚，并实际查看了一张 Brooks 原书图例。这些结果不等于全书理解、新图分析准确率或交易效果已获验证。
+
+开发检查：
+
+```bash
+python -m pip install pyyaml Pillow pypdf jsonschema
+python -m unittest discover -s tests -v
+```
+
+渲染集成测试需要 Poppler；缺少相关依赖时会跳过对应测试。
+
+## 项目来源与许可
+
+本项目由 [savagealexander](https://github.com/savagealexander) 维护，基于 [kangarooking/cangjie-skill](https://github.com/kangarooking/cangjie-skill) 开发。
+
+原项目提供方法提取、验证、能力卡和编译工具链；本分支增加图文联合阅读流程、PDF 图页准备、图片资源支持及相关测试，并使用独立名称和说明。继承的历史资料、示例与网站代码不表示其内容已按本分支流程重新验证。
+
+代码及适用的项目文档沿用 [MIT License](./LICENSE)，保留原许可声明。书籍、课程及图片的权利属于各自权利人；工具许可证不会改变来源材料的使用和分发权限。

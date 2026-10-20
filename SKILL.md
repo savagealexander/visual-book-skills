@@ -1,11 +1,14 @@
 ---
-name: cangjie-skill
-description: Distill a book, long-video transcript, podcast, course, or interview into a coherent set of executable skills. Use when the user asks to "拆书" / "蒸馏一本书" / "把 XX 书做成 skill" / "把这个视频/播客/课程蒸馏成 skill" / "turn a book or video into skills" — i.e. wants the frameworks, principles, and methodologies in long-form content extracted into atomic, reusable Claude skills that an agent can invoke in real-world situations. NOT for simple summarization, book reviews, or role-playing as the author (that is nuwa-skill's job).
+name: visual-book-skills
+description: Read books and source documents with text and figure evidence, then build reusable Agent Skills. Use when asked to turn a book, manual, course note or transcript into executable methods; inspect chart-heavy books with original figures, captions and source locations. 图文联合阅读、拆书、从书籍构建技能。
 metadata:
   cangjie.version: "2.5.0"
+  visual-book-skills.name: "图文知行 · Visual Book Skills"
 ---
 
-# cangjie-skill — 把一本书蒸馏成一组可执行 skills 的元 skill
+# 图文知行 · Visual Book Skills
+
+基于 kangarooking/cangjie-skill 的图文阅读增强版；项目来源与许可见 README.md。
 
 ## 使命
 
@@ -51,7 +54,7 @@ metadata:
 1. **内容文本来源**: PDF / EPUB / TXT / 字幕文件 / 转写稿路径, 或可访问的纯文本。**不要**在没有文本的情况下"凭记忆"蒸馏 — 宁可停下来问用户要。(视频/播客建议先用 video-downloader 类工具拿到转写文本)
 2. **内容元信息**: 书籍是"书名 + 作者 + 出版年"; 视频/播客/课程是"标题 + 作者(UP 主/主播/讲者) + 发布时间"。用于目录命名和审计。
 3. **使用目的**（决定输出模式推荐）: 学习/查阅这本书 → 倾向 single；接入日常工作流、跨书组合 → 倾向 pack。不确定时按 single-first 原则先推荐 single。
-4. **是否首次试点**: 如果用户是第一次用 cangjie-skill,建议先蒸馏 1 份内容验证流程再批量。
+4. **是否首次试点**: 如果用户是第一次用 visual-book-skills,建议先蒸馏 1 份内容验证流程再批量。
 
 **非书籍内容的字段映射**: 章节类字段对视频填时间戳或分 P,对播客填集数,对课程填讲次 — 保证可追溯即可。
 
@@ -174,7 +177,7 @@ books/<book-slug>/
 ## 与 nuwa-skill / darwin-skill 的生态定位
 
 - **nuwa-skill**: 蒸馏人 (思维方式 / 表达 DNA)
-- **cangjie-skill** (本 skill): 蒸馏书 (方法论 / 框架 / 原则)
+- **visual-book-skills** (本 skill): 结合文字与图表证据，提取书中的方法论、框架和原则
 - **darwin-skill**: 进化任意 skill
 
 三者咬合: 本 skill 输出的评测用例遵循 darwin-skill 格式,以便产出的 skill 可直接接入 darwin 做自动进化。
